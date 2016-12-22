@@ -65,6 +65,7 @@ class SpaceGameWindow(arcade.Window):
     TIMELIMIT = 60
     STOP =0
     TIMESLEEP =0
+    Round = ["SOM","UFO"]
 
     def __init__(self, width, height):
         super().__init__(width, height)
@@ -87,6 +88,9 @@ class SpaceGameWindow(arcade.Window):
         self.instructions.append(texture)
 
         texture = arcade.load_texture("images/end-bg.png")
+        self.instructions.append(texture)
+
+        texture = arcade.load_texture("images/START_BG.png")
         self.instructions.append(texture)
 
         self.world = World(width, height)
@@ -130,7 +134,7 @@ class SpaceGameWindow(arcade.Window):
         self.p2_choice3_sprite = arcade.Sprite('images/choice3.png', SPRITE_SCALING)
         self.p2_choice3_sprite.center_x = 930
         self.p2_choice3_sprite.center_y = 200
-        
+
         self.pointUFO_sprite = arcade.Sprite('images/pointufo.png', SPRITE_SCALING)
         self.pointUFO_sprite.center_x = 200
         self.pointUFO_sprite.center_y = 70
@@ -151,7 +155,7 @@ class SpaceGameWindow(arcade.Window):
         self.ans_list = arcade.SpriteList()
         self.time_list = arcade.SpriteList()
         self.ice_list = arcade.SpriteList()
-
+        self.star_list = arcade.SpriteList()
 
         self.play1_sprite.center_x = 400
         self.play1_sprite.center_y = 400
@@ -176,6 +180,27 @@ class SpaceGameWindow(arcade.Window):
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       page_texture.width,
                                       page_texture.height, page_texture, 0)
+
+    def introgame(self):
+        output = "Choose SOM or UFO"
+        arcade.draw_text(output, 150, 800, arcade.color.BLACK_LEATHER_JACKET, 42)
+        output = "SOM Control by: LEFT RIGHT UP DOWN"
+        arcade.draw_text(output, 200, 730, arcade.color.PUMPKIN, 24)
+        output = "UFO Control by: A D W S"
+        arcade.draw_text(output, 200, 650, arcade.color.STRAWBERRY, 24)
+        output = "How to play"
+        arcade.draw_text(output, 200, 550, arcade.color.BLACK_LEATHER_JACKET, 24)
+        output = "Collect the box in game to select choice"
+        arcade.draw_text(output, 240, 450, arcade.color.BLUE_SAPPHIRE, 24)
+        output = "1 Box == Choice 1 == 10 point"
+        arcade.draw_text(output, 240, 390, arcade.color.BLUE_SAPPHIRE, 24)
+        output = "Answer by enter on SHIFT"
+        arcade.draw_text(output, 240, 330, arcade.color.BLUE_SAPPHIRE, 24)
+        output = "In your turn, you must collect box to answer quiz"
+        arcade.draw_text(output, 150, 180, arcade.color.RESOLUTION_BLUE, 24)
+        output = "but another player can ้hinder you!? , Click to begin"
+        arcade.draw_text(output, 150, 120, arcade.color.RED_ORANGE, 24)
+
 
     def draw_game(self):
 
@@ -221,12 +246,8 @@ class SpaceGameWindow(arcade.Window):
             arcade.draw_text(output, 310, 250, arcade.color.WHITE, 42)
 
         elif self.current_state == INSTRUCTIONS_PAGE_1:
-            output = "Please choose SOM, UFO"
-            arcade.draw_text(output, 240, 700, arcade.color.WHITE_SMOKE, 42)
-            output = "How to play"
-            arcade.draw_text(output, 240, 600, arcade.color.WHITE_SMOKE, 32)
-            output = "Collect char in game quiz to win"
-            arcade.draw_text(output, 240, 500, arcade.color.WHITE_SMOKE, 32)
+            self.draw_instructions_page(3)
+            self.introgame()
 
         elif self.current_state == GAME_RUNNING:
             self.draw_instructions_page(1)
@@ -235,7 +256,7 @@ class SpaceGameWindow(arcade.Window):
             output = "Time: {:02d}" .format(self.TIMELIMIT-seconds)
             a = int(format(self.TIMELIMIT-seconds))
             arcade.draw_text(output, 750, 920, arcade.color.OCEAN_BOAT_BLUE, 30)
-            output = "WHAT IS IT?"
+            output = "TURN "+self.Round[self.TURN]
             arcade.draw_text(output, 350+self.moveword, 920, arcade.color.BLACK, 20)
 
             output = WORD[self.ORDER][0]
@@ -258,28 +279,8 @@ class SpaceGameWindow(arcade.Window):
                 self.current_state = GAME_OVER
 
             if self.TIMESET == int(seconds):
-                for x in range(10):
-                    ans = arcade.Sprite("images/ansbox.png", SPRITE_SCALING/2)
-
-                    ans.center_x = random.randrange(SCREEN_WIDTH)
-                    ans.center_y = random.randrange(SCREEN_HEIGHT)
-
-                    self.all_sprites_list.append(ans)
-                    self.ans_list.append(ans)
-                if self.TIMESET%10 ==0:
-                    for x in range(1):
-                        ice = arcade.Sprite("images/ice.png", SPRITE_SCALING)
-                        ice.center_x = random.randrange(SCREEN_WIDTH)
-                        ice.center_y = random.randrange(SCREEN_HEIGHT)
-                        self.all_sprites_list.append(ice)
-                        self.ice_list.append(ice)
-                if (self.TIMESET%15 == 0)and(self.TIMESET !=0):
-                    for x in range(1):
-                        atime = self.addtime_sprite
-                        atime.center_x = random.randrange(SCREEN_WIDTH)
-                        atime.center_y = random.randrange(SCREEN_HEIGHT)
-                        self.all_sprites_list.append(atime)
-                        self.time_list.append(atime)
+                self.clean()
+                self.setitem()
                 self.TIMESET += 5
 
             if self.STOP != 0:
@@ -289,64 +290,8 @@ class SpaceGameWindow(arcade.Window):
                 self.STOP =0
                 self.TIMESLEEP = 0
 
-            self.draw_game()
-            self.all_sprites_list.draw()
-            if self.ORDER == 0:
-               self.quiz_sprite1.draw()
-            if self.ORDER == 1:
-                self.quiz_sprite2.draw()
-            if self.ORDER == 2:
-                self.quiz_sprite3.draw()
-            if self.ORDER == 3:
-                self.quiz_sprite4.draw()
-
-            if self.SCORESOM >= 10:
-               self.choice1_sprite.draw()
-               self.Choice_som = 0
-            if self.SCORESOM >= 20:
-                self.choice2_sprite.draw()
-                self.Choice_som = 1
-            if self.SCORESOM >= 30:
-                self.choice3_sprite.draw()
-                self.Choice_som = 2
-            if self.SCOREUFO >= 10:
-                self.p2_choice1_sprite.draw()
-                self.Choice_ufo = 0
-            if self.SCOREUFO >= 20:
-                self.p2_choice2_sprite.draw()
-                self.Choice_ufo = 1
-            if self.SCOREUFO >= 30:
-                self.p2_choice3_sprite.draw()
-                self.Choice_ufo = 2
-
-            if self.checkans == 1:
-                if self.Choice_som == NUMSTATUS[self.ORDER]:
-                    self.POINTSOM += 10
-                    self.ORDER += 1
-                    self.SCORESOM =0
-                    self.SCOREUFO =0
-
-                    if self.TURN == 0:
-                      self.TURN += 1
-                    else:
-                        self.TURN -= 1
-                else:
-                    self.checkans =0
-                    self.SCORESOM =0
-
-            if self.checkans == 2:
-                if self.Choice_ufo == NUMSTATUS[self.ORDER]:
-                    self.POINTUFO += 10
-                    self.ORDER += 1
-                    self.SCORESOM = 0
-                    self.SCOREUFO = 0
-                    if self.TURN == 0:
-                       self.TURN += 1
-                    else:
-                        self.TURN -= 1
-                else:
-                    self.checkans =0
-                    self.SCOREUFO =0
+            self.listquiz()
+            self.checkscore()
 
 
         else:
@@ -354,6 +299,108 @@ class SpaceGameWindow(arcade.Window):
             self.draw_game_over()
 
 
+
+    def listquiz(self):
+
+        self.draw_game()
+        self.all_sprites_list.draw()
+        if self.ORDER == 0:
+            self.quiz_sprite1.draw()
+        if self.ORDER == 1:
+            self.quiz_sprite2.draw()
+        if self.ORDER == 2:
+            self.quiz_sprite3.draw()
+        if self.ORDER == 3:
+            self.quiz_sprite4.draw()
+
+    def clean(self):
+        for a in self.ans_list:
+            a.kill()
+        for a in self.ice_list:
+            a.kill()
+        for a in self.time_list:
+            a.kill()
+
+    def setitem(self):
+        for x in range(10):
+            ans = arcade.Sprite("images/ansbox.png", SPRITE_SCALING / 2)
+
+            ans.center_x = random.randrange(SCREEN_WIDTH)
+            ans.center_y = random.randrange(SCREEN_HEIGHT)
+
+            self.all_sprites_list.append(ans)
+            self.ans_list.append(ans)
+        if self.TIMESET % 10 == 0:
+            for x in range(1):
+                ice = arcade.Sprite("images/ice.png", SPRITE_SCALING)
+                ice.center_x = random.randrange(SCREEN_WIDTH)
+                ice.center_y = random.randrange(SCREEN_HEIGHT)
+                self.all_sprites_list.append(ice)
+                self.ice_list.append(ice)
+        if (self.TIMESET % 15 == 0) and (self.TIMESET != 0):
+            for x in range(1):
+                atime = arcade.Sprite("images/addtime.png", SPRITE_SCALING)
+                atime.center_x = random.randrange(SCREEN_WIDTH)
+                atime.center_y = random.randrange(SCREEN_HEIGHT)
+                self.all_sprites_list.append(atime)
+                self.time_list.append(atime)
+        if (self.TIMESET % 10 == 0) and (self.TIMESET != 0):
+            for x in range(1):
+                star = arcade.Sprite("images/star.png", SPRITE_SCALING)
+                star.center_x = random.randrange(SCREEN_WIDTH)
+                star.center_y = random.randrange(SCREEN_HEIGHT)
+                self.all_sprites_list.append(star)
+                self.star_list.append(star)
+
+    def checkscore(self):
+
+        if self.SCORESOM >= 10:
+            self.choice1_sprite.draw()
+            self.Choice_som = 0
+        if self.SCORESOM >= 20:
+            self.choice2_sprite.draw()
+            self.Choice_som = 1
+        if self.SCORESOM >= 30:
+            self.choice3_sprite.draw()
+            self.Choice_som = 2
+        if self.SCOREUFO >= 10:
+            self.p2_choice1_sprite.draw()
+            self.Choice_ufo = 0
+        if self.SCOREUFO >= 20:
+            self.p2_choice2_sprite.draw()
+            self.Choice_ufo = 1
+        if self.SCOREUFO >= 30:
+            self.p2_choice3_sprite.draw()
+            self.Choice_ufo = 2
+
+        if self.checkans == 1:
+            if self.Choice_som == NUMSTATUS[self.ORDER]:
+                self.POINTSOM += 10
+                self.ORDER += 1
+                self.SCORESOM = 0
+                self.SCOREUFO = 0
+
+                if self.TURN == 0:
+                    self.TURN += 1
+                else:
+                    self.TURN -= 1
+            else:
+                self.checkans = 0
+                self.SCORESOM = 0
+
+        if self.checkans == 2:
+            if self.Choice_ufo == NUMSTATUS[self.ORDER]:
+                self.POINTUFO += 10
+                self.ORDER += 1
+                self.SCORESOM = 0
+                self.SCOREUFO = 0
+                if self.TURN == 0:
+                    self.TURN += 1
+                else:
+                    self.TURN -= 1
+            else:
+                self.checkans = 0
+                self.SCOREUFO = 0
 
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -389,6 +436,9 @@ class SpaceGameWindow(arcade.Window):
         hit_list_ice = \
             arcade.check_for_collision_with_list(self.play1_sprite,
                                                  self.ice_list)
+        hit_list_star = \
+            arcade.check_for_collision_with_list(self.play1_sprite,
+                                                 self.star_list)
 
         for ans in hit_list_box:
             ans.kill()
@@ -405,6 +455,13 @@ class SpaceGameWindow(arcade.Window):
             ice.kill()
             self.STOP =2
 
+        for star in hit_list_star:
+            star.kill()
+            if self.TURN == 0:
+             self.SCORESOM += 5
+            else:
+             self.SCOREUFO -= 5
+
 
         hit_list1_box = \
             arcade.check_for_collision_with_list(self.play2_sprite,
@@ -417,6 +474,9 @@ class SpaceGameWindow(arcade.Window):
         hit_list1_ice = \
             arcade.check_for_collision_with_list(self.play2_sprite,
                                                  self.ice_list)
+        hit_list1_star = \
+            arcade.check_for_collision_with_list(self.play2_sprite,
+                                                 self.star_list)
 
         for ans in hit_list1_box:
             ans.kill()
@@ -433,6 +493,13 @@ class SpaceGameWindow(arcade.Window):
         for ice in hit_list1_ice:
             ice.kill()
             self.STOP = 1
+
+        for star in hit_list1_star:
+            star.kill()
+            if self.TURN == 0:
+             self.SCOREUFO += 5
+            else:
+             self.SCORESOM -= 5
 
 
         if self.current_state == INSTRUCTIONS_PAGE_1:
